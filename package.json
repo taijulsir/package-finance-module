@@ -17,6 +17,7 @@
   },
   "files": [
     "src",
+    "cli.js",
     "index.js",
     "install.js"
   ],
