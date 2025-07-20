@@ -1,5 +1,5 @@
 {
-  "name": "@finance/finance-modules-ui-lib",
+  "name": "finance-modules-ui-lib",
   "version": "1.0.0",
   "main": "index.js",
   "module": "index.js",
