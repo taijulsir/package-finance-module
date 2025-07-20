@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-
-import { install } from "./install";
+const { install } = require("./install");
 
 install();

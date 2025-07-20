@@ -57,6 +57,10 @@ function syncComponents() {
     });
 }
 
-export function install() {
+ function install() {
     syncComponents();
 }
+
+module.exports = {
+    install
+};

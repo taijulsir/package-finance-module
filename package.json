@@ -3,7 +3,7 @@
   "version": "1.0.3",
   "main": "index.js",
   "module": "index.js",
-  "type": "module",
+  "type": "commonjs",
   "bin": {
     "finance-modules-ui-lib": "./cli.js"
   },
