@@ -1,3 +1,5 @@
+package.json - for pre install.
+
 {
   "name": "finance-modules-ui-lib",
   "version": "1.0.0",
@@ -9,6 +11,9 @@
   },
   "exports": {
     ".": "./index.js"
+  },
+   "scripts": {
+    "postinstall": "node install.js"
   },
   "peerDependencies": {
     "react": "^18.0.0",

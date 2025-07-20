@@ -57,4 +57,6 @@ function syncComponents() {
     });
 }
 
-syncComponents();
+export function install() {
+    syncComponents();
+}
