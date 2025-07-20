@@ -4,68 +4,72 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const srcDir = path.join(__dirname, "src", "components");
 const PACKAGE_NAME = "finance-modules-ui-lib";
 
-const isBeingLinked = process.env.npm_lifecycle_event === "prepublish" || process.env.npm_config_global;
+const srcRoot = path.join(__dirname, "src");
 
 const appRoot = process.cwd();
-if (appRoot.includes(`node_modules/${PACKAGE_NAME}`) || appRoot === __dirname) {
-    console.log("ℹ️ Skipping component copy in dev or global install");
-    process.exit(0);
-}
-
-const targetDir = path.join(appRoot, "src", "components", "modules");
+const targetRoot = path.join(appRoot, "src", "components", "modules");
 
 function hashFile(filePath) {
-    const data = fs.readFileSync(filePath);
-    return crypto.createHash("sha256").update(data).digest("hex");
+  const data = fs.readFileSync(filePath);
+  return crypto.createHash("sha256").update(data).digest("hex");
 }
 
-function copyFileWithHashCheck(srcFile, destFile) {
-    if (!fs.existsSync(destFile)) {
-        fs.copyFileSync(srcFile, destFile);
-        console.log("🆕 Added:", path.relative(srcDir, srcFile));
+function copyFile(src, dest) {
+  if (!fs.existsSync(dest)) {
+    fs.copyFileSync(src, dest);
+    console.log("🆕 Added:", path.relative(srcRoot, src));
+  } else {
+    const srcHash = hashFile(src);
+    const destHash = hashFile(dest);
+    if (srcHash !== destHash) {
+      fs.copyFileSync(src, dest);
+      console.log("🔄 Updated:", path.relative(srcRoot, src));
     } else {
-        const srcHash = hashFile(srcFile);
-        const destHash = hashFile(destFile);
-        if (srcHash !== destHash) {
-            fs.copyFileSync(srcFile, destFile);
-            console.log("🔄 Updated:", path.relative(srcDir, srcFile));
-        } else {
-            console.log("✅ Up-to-date:", path.relative(srcDir, srcFile));
-        }
+      console.log("✅ Up-to-date:", path.relative(srcRoot, src));
     }
+  }
 }
 
 function copyRecursive(src, dest) {
-    const stat = fs.statSync(src);
+  const stat = fs.statSync(src);
 
-    if (stat.isDirectory()) {
-        if (!fs.existsSync(dest)) {
-            fs.mkdirSync(dest, { recursive: true });
-        }
-
-        const items = fs.readdirSync(src);
-        for (const item of items) {
-            const srcPath = path.join(src, item);
-            const destPath = path.join(dest, item);
-            copyRecursive(srcPath, destPath);
-        }
-    } else {
-        copyFileWithHashCheck(src, dest);
+  if (stat.isDirectory()) {
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest, { recursive: true });
     }
+    const entries = fs.readdirSync(src);
+    entries.forEach((entry) => {
+      const srcPath = path.join(src, entry);
+      const destPath = path.join(dest, entry);
+      copyRecursive(srcPath, destPath);
+    });
+  } else if (stat.isFile()) {
+    copyFile(src, dest);
+  }
 }
 
-function syncComponents() {
-    if (!fs.existsSync(srcDir)) {
-        console.warn("❌ Components directory not found:", srcDir);
-        return;
+function install() {
+  if (!fs.existsSync(srcRoot)) {
+    console.error("❌ Source 'src' folder not found at:", srcRoot);
+    process.exit(1);
+  }
+
+  // Read all directories inside src/
+  const entries = fs.readdirSync(srcRoot, { withFileTypes: true });
+  entries.forEach((entry) => {
+    if (entry.isDirectory()) {
+      const srcFolder = path.join(srcRoot, entry.name);
+      const destFolder = path.join(targetRoot, entry.name);
+      copyRecursive(srcFolder, destFolder);
     }
-
-    copyRecursive(srcDir, targetDir);
+  });
 }
 
-export function install() {
-    syncComponents();
+// Run install if this script is run directly
+if (require.main === module) {
+  install();
 }
+
+module.exports = { install };
