@@ -9,7 +9,7 @@ export default function Button({ children, className = '', ...props }) {
       onClick={() => navigate('/about')}
       className={`my-lib-button text-red-500 cursor-pointer ${className}`} {...props}>
       {children}
-      Updated
+      Button
     </button>
 
   );
