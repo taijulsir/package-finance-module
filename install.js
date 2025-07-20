@@ -4,73 +4,68 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
+const srcDir = path.join(__dirname, "src", "components");
 const PACKAGE_NAME = "finance-modules-ui-lib";
 
-const srcRoot = path.join(__dirname, "src");
-
-// 🔍 Auto-detect all folders inside /src
-const sourceDirs = fs.readdirSync(srcRoot)
-  .map(name => path.join(srcRoot, name))
-  .filter(p => fs.statSync(p).isDirectory());
+const isBeingLinked = process.env.npm_lifecycle_event === "prepublish" || process.env.npm_config_global;
 
 const appRoot = process.cwd();
 if (appRoot.includes(`node_modules/${PACKAGE_NAME}`) || appRoot === __dirname) {
-  console.log("ℹ️ Skipping install in dev or global CLI usage.");
-  process.exit(0);
+    console.log("ℹ️ Skipping component copy in dev or global install");
+    process.exit(0);
 }
 
-const targetRoot = path.join(appRoot, "src");
+const targetDir = path.join(appRoot, "src", "components", "modules");
 
 function hashFile(filePath) {
-  const data = fs.readFileSync(filePath);
-  return crypto.createHash("sha256").update(data).digest("hex");
+    const data = fs.readFileSync(filePath);
+    return crypto.createHash("sha256").update(data).digest("hex");
 }
 
-function copyOrUpdateFile(src, dest) {
-  if (!fs.existsSync(dest)) {
-    fs.copyFileSync(src, dest);
-    console.log("🆕 Added:", path.relative(appRoot, dest));
-  } else {
-    const srcHash = hashFile(src);
-    const destHash = hashFile(dest);
-    if (srcHash !== destHash) {
-      fs.copyFileSync(src, dest);
-      console.log("🔄 Updated:", path.relative(appRoot, dest));
+function copyFileWithHashCheck(srcFile, destFile) {
+    if (!fs.existsSync(destFile)) {
+        fs.copyFileSync(srcFile, destFile);
+        console.log("🆕 Added:", path.relative(srcDir, srcFile));
     } else {
-      console.log("✅ Up-to-date:", path.relative(appRoot, dest));
+        const srcHash = hashFile(srcFile);
+        const destHash = hashFile(destFile);
+        if (srcHash !== destHash) {
+            fs.copyFileSync(srcFile, destFile);
+            console.log("🔄 Updated:", path.relative(srcDir, srcFile));
+        } else {
+            console.log("✅ Up-to-date:", path.relative(srcDir, srcFile));
+        }
     }
-  }
 }
 
-function copyFolderRecursive(src, dest) {
-  if (!fs.existsSync(dest)) {
-    fs.mkdirSync(dest, { recursive: true });
-  }
+function copyRecursive(src, dest) {
+    const stat = fs.statSync(src);
 
-  const entries = fs.readdirSync(src, { withFileTypes: true });
+    if (stat.isDirectory()) {
+        if (!fs.existsSync(dest)) {
+            fs.mkdirSync(dest, { recursive: true });
+        }
 
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-
-    if (entry.isDirectory()) {
-      copyFolderRecursive(srcPath, destPath);
+        const items = fs.readdirSync(src);
+        for (const item of items) {
+            const srcPath = path.join(src, item);
+            const destPath = path.join(dest, item);
+            copyRecursive(srcPath, destPath);
+        }
     } else {
-      copyOrUpdateFile(srcPath, destPath);
+        copyFileWithHashCheck(src, dest);
     }
-  }
 }
 
-function syncAllSources() {
-  for (const srcDir of sourceDirs) {
-    const relative = path.relative(srcRoot, srcDir);
-    const destDir = path.join(targetRoot, relative);
-    copyFolderRecursive(srcDir, destDir);
-  }
+function syncComponents() {
+    if (!fs.existsSync(srcDir)) {
+        console.warn("❌ Components directory not found:", srcDir);
+        return;
+    }
+
+    copyRecursive(srcDir, targetDir);
 }
 
-function install() {
-  syncAllSources();
+export function install() {
+    syncComponents();
 }
-
-module.exports = { install };
