@@ -1,0 +1,25 @@
+{
+  "name": "@finance/finance-modules-ui-lib",
+  "version": "1.0.0",
+  "main": "index.js",
+  "module": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+   "scripts": {
+    "postinstall": "node install.js"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^7.6.3"
+  },
+  "files": [
+    "src",
+    "index.js",
+    "install.js"
+  ],
+  "devDependencies": {
+    "react-router-dom": "^7.6.3"
+  }
+}
