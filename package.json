@@ -5,7 +5,7 @@
   "module": "index.js",
   "type": "module",
   "bin": {
-    "finance-modules-ui-lib": "cli.js"
+    "finance-modules-ui-lib": "./cli.js"
   },
   "exports": {
     ".": "./index.js"
